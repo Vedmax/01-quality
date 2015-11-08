@@ -81,5 +81,67 @@ namespace MarkdownProcessor
 			var closedTags = proc.FilterByClosed(tags);
 			CollectionAssert.IsEmpty(closedTags);
 		}
+
+		[Test]
+		public void GetRightPairTag()
+		{
+			var proc = new Processor("_o__lol_");
+			var tags = proc.FindFontTags();
+			var closedTags = proc.FilterByClosed(tags);
+			var pairTag = proc.GetPairTag(new Tag(0, "_"), closedTags);
+			Assert.AreEqual(pairTag, new Tag(7, "_"));
+		}
+
+		[Test]
+		public void ReturnNullIfPairTagDoesntExist()
+		{
+			var proc = new Processor("_o __lol__");
+			var tags = proc.FindFontTags();
+			var closedTags = proc.FilterByClosed(tags);
+			var pairTag = proc.GetPairTag(new Tag(0, "_"), closedTags);
+			Assert.Null(pairTag);
+		}
+
+		[Test]
+		public void JoinTagsAndText()
+		{
+			var proc = new Processor("");
+			var res = proc.JoinTagsAndText(new Tag(0, "`"), new Tag(1, "`"), "ololo");
+			Assert.AreEqual(res, "<code>ololo<\\code>");
+		}
+
+		[Test]
+		public void GetTextAfterPositionToEnd()
+		{
+			var proc = new Processor("o _op_ kek");
+			var res = proc.GetTextAfterPosition(6, new Queue<Tag>());
+			Assert.AreEqual(res, " kek");
+		}
+		
+		[Test]
+		public void GetTextAfterPositionToNextOpenTag()
+		{
+			var proc = new Processor("_op_ kek _op_");
+			var openTags = proc.FilterByOpen(proc.FindFontTags().ToArray());
+			openTags.Dequeue();
+			var res = proc.GetTextAfterPosition(4, openTags);
+			Assert.AreEqual(res, " kek ");
+		}
+
+		[Test]
+		public void NotMarkTagsInsideCodeTag()
+		{
+			var proc = new Processor("`o _op_ kek`");
+			var res = proc.MarkText();
+			Assert.AreEqual(res, "<code>o _op_ kek<\\code>");
+		}
+
+		[Test]
+		public void MarkTagsInsideOverTags()
+		{
+			var proc = new Processor("__o _op_ kek__");
+			var res = proc.MarkText();
+			Assert.AreEqual(res, "<strong>o <em>op<\\em> kek<\\strong>");
+		}
 	}
 }
