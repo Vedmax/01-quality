@@ -17,7 +17,7 @@ namespace MarkdownProcessor
 		{
 			Index = index;
 			Type = type;
-			Length = type.Length;
+			Length = type.Count(x => x != '\r' && x != '\n');
 		}
 
 		public override bool Equals(object obj)
