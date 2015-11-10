@@ -37,7 +37,7 @@ namespace MarkdownProcessor
 				var tags = FindFontTags();
 				if (!tags.Any())
 				{
-					if (Text[0] != '\r')
+					if (Text[0] != '\r' && paragraphs.Length != 1)
 						result.Append("<p>" + Text + "<\\p>");
 					else
 						result.Append(Text);
@@ -147,6 +147,27 @@ namespace MarkdownProcessor
 				.Select(match => new Tag(match.Index, match.Value))
 				.OrderBy(x => x.Index)
 				.ThenByDescending(x => x.Length));
+		}
+
+		public string GetHtmlCode()
+		{
+			CoverExistedTags(Text);
+			return "<!DOCTYPE html>\n" +
+				   "<html>\n" +
+				   "<head>\n" +
+				   "<title>Vedmax</title>\n" +
+				   "<meta charset='utf-8'>\n" +
+				   "</head>\n" +
+				   "<body>\n" +
+				   MarkText() +
+				   "</body>\n" +
+				   "</html>";
+		}
+
+		private void CoverExistedTags(string text)
+		{
+			Text = Regex.Replace(text, "<", "\\<");
+			Text = Regex.Replace(Text, ">", "\\>");
 		}
 	}
 }
