@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarkdownProcessor", "MarkdownProcessor\MarkdownProcessor.csproj", "{905E6CAB-FF77-4466-9B1F-D9B29E349A8E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{69416F30-489B-42AE-9DB5-E5524A8AF176}"
-	ProjectSection(SolutionItems) = preProject
-		Markdown\sample.md = Markdown\sample.md
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

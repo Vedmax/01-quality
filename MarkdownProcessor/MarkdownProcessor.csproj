@@ -51,6 +51,9 @@
     <Compile Include="Tag.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Markdown\sample.md">
+      <Link>sample.md</Link>
+    </None>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
