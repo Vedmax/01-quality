@@ -13,7 +13,7 @@ namespace MarkdownProcessor
 	public class Processor
 	{
 		public string Text;
-		public Stack<Tag> Tags;
+		private readonly int _depth;
 
 		public Dictionary<string, string> SignatureOfTags = new Dictionary<string, string>()
 		{
@@ -22,9 +22,10 @@ namespace MarkdownProcessor
 			{ "__", "strong" },
 		};
 
-		public Processor(string inputText)
+		public Processor(string inputText, int depth)
 		{
 			Text = inputText;
+			_depth = depth;
 		}
 
 		public string MarkText()
@@ -36,14 +37,17 @@ namespace MarkdownProcessor
 				Text = paragraph;
 				var tags = FindFontTags();
 				if (!tags.Any())
-				{
+				{ 
 					if (Text[0] != '\r' && paragraphs.Length != 1)
-						result.Append("<p>" + Text + "<\\p>");
+						result.Append("<p>\n" + Text + "\n</p>\n");
 					else
 						result.Append(Text);
 					continue;
 				}
-				result.Append("<p>" + GetMarkedText(tags) + "<\\p>");
+				if (_depth == 0 || paragraphs.Length != 1)
+					result.Append("<p>\n" + GetMarkedText(tags) + "\n</p>\n");
+				else
+					result.Append(GetMarkedText(tags));
 			}
 			return result.ToString();
 		}
@@ -56,28 +60,33 @@ namespace MarkdownProcessor
 			{
 				lastIndex = tags.Peek().Index;
 				var openTag = GetOpenTag(tags);
-				if (openTag == null)
-					return Text;
-				else
+				if (openTag != null)
 				{
 					resultString.Append(GetMissingText(lastIndex, openTag));
 					lastIndex = openTag.Index;
 				}
+				else
+					return Text;
 				var closeTag = GetPairTag(openTag, tags);
-				if (closeTag == null)
+				if (closeTag != null)
 				{
-					resultString.Append(GetTextAfterPosition(openTag.Index, tags));
-					continue;
+					resultString.Append(JoinTagsAndText(openTag, closeTag, GetSubstringBetweenTags(openTag, closeTag)));
+					DeleteUsedTags(closeTag, tags);
+					resultString.Append(GetTextAfterPosition(closeTag.Index + closeTag.Length, tags));
 				}
-				var endOfOpenTag = openTag.Index + openTag.Length;
-				var substr = Text.Substring(endOfOpenTag, closeTag.Index - endOfOpenTag);
-				if (closeTag.Type != "`")
-					substr = new Processor(substr).MarkText();
-				resultString.Append(JoinTagsAndText(openTag, closeTag, substr));
-				DeleteUsedTags(closeTag, tags);
-				resultString.Append(GetTextAfterPosition(closeTag.Index + closeTag.Length, tags));
+				else
+					resultString.Append(GetTextAfterPosition(openTag.Index, tags));
 			}
 			return resultString.ToString();
+		}
+
+		public string GetSubstringBetweenTags(Tag openTag, Tag closeTag)
+		{
+			var endOfOpenTag = openTag.Index + openTag.Length;
+			var substr = Text.Substring(endOfOpenTag, closeTag.Index - endOfOpenTag);
+			if (closeTag.Type != "`")
+				substr = new Processor(substr, 1).MarkText();
+			return substr;
 		}
 
 		public string GetMissingText(int lastIndex, Tag openTag)
@@ -103,7 +112,7 @@ namespace MarkdownProcessor
 
 		public string JoinTagsAndText(Tag openTag, Tag closeTag, string substring)
 		{
-			return "<" + SignatureOfTags[openTag.Type] + ">" + substring + "<\\" + SignatureOfTags[closeTag.Type] + ">";
+			return "<" + SignatureOfTags[openTag.Type] + ">" + substring + "</" + SignatureOfTags[closeTag.Type] + ">";
 		}
 
 		public Tag GetPairTag(Tag openTag, Queue<Tag> tags)
@@ -141,7 +150,12 @@ namespace MarkdownProcessor
 
 		public Queue<Tag> FindFontTags()
 		{
-			var matches = Regex.Matches(Text, "(__)|(_)|(`)");
+			var matches = Regex.Matches(Text, 
+				string.Concat(SignatureOfTags
+				.Keys
+				.OrderByDescending(x => x.Length)
+				.Select(x => "(" + x + ")")
+					.ToArray()).Replace(")(", ")|("));
 			return new Queue<Tag>(matches
 				.Cast<Match>()
 				.Select(match => new Tag(match.Index, match.Value))
@@ -164,10 +178,10 @@ namespace MarkdownProcessor
 				   "</html>";
 		}
 
-		private void CoverExistedTags(string text)
+		public void CoverExistedTags(string text)
 		{
-			Text = Regex.Replace(text, "<", "\\<");
-			Text = Regex.Replace(Text, ">", "\\>");
+			Text = Regex.Replace(text, "<", "&lt;");
+			Text = Regex.Replace(Text, ">", "&gt;");
 		}
 	}
 }

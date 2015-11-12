@@ -12,10 +12,11 @@ namespace MarkdownProcessor
 		public static void Main(string[] args)
 		{
 			var text =
-				File.ReadAllText(@"C:\Users\Max\Documents\Visual Studio 2012\Projects\01-quality\Markdown\sample.md", Encoding.UTF8);
-			var proc = new Processor(text);
+				File.ReadAllText(@"sample.md", Encoding.UTF8);
+			var proc = new Processor(text, 0);
 			var code = proc.GetHtmlCode();
-			File.WriteAllText(@"C:\Users\Max\Documents\Visual Studio 2012\Projects\01-quality\index.html", code);
+			Console.WriteLine(code);
+			//File.WriteAllText(@"..\..\index.html", code, Encoding.UTF8);
 		}
 	}
 }
